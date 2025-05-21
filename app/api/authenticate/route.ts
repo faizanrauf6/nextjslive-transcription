@@ -4,7 +4,6 @@ import { NextResponse, type NextRequest } from "next/server";
 export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
-  // exit early so we don't request 70000000 keys while in devmode
   if (process.env.DEEPGRAM_ENV === "development") {
     return NextResponse.json({
       key: process.env.DEEPGRAM_API_KEY ?? "",
@@ -23,7 +22,6 @@ export async function GET(request: NextRequest) {
   }
 
   const project = projectsResult?.projects[0];
-
   if (!project) {
     return NextResponse.json(
       new DeepgramError(
@@ -34,10 +32,9 @@ export async function GET(request: NextRequest) {
 
   let { result: newKeyResult, error: newKeyError } =
     await deepgram.manage.createProjectKey(project.project_id, {
-      comment: "Temporary API key",
-      scopes: ["usage:write"],
-      tags: ["next.js"],
-      time_to_live_in_seconds: 60,
+      comment: "My New API key",
+      scopes: ['member:read', 'member:write'],
+      tags: ["next.js", "demo", "frontend"],
     });
 
   if (newKeyError) {

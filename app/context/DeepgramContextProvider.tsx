@@ -54,21 +54,31 @@ const DeepgramContextProvider: FunctionComponent<
    * @returns A Promise that resolves when the connection is established.
    */
   const connectToDeepgram = async (options: LiveSchema, endpoint?: string) => {
-    const key = await getApiKey();
-    const deepgram = createClient(key);
+    try {
+      const key = await getApiKey();
+      const deepgram = createClient(key);
+      const conn = deepgram.listen.live(options, endpoint);
 
-    const conn = deepgram.listen.live(options, endpoint);
+      conn.addListener(LiveTranscriptionEvents.Open, () => {
+        setConnectionState(LiveConnectionState.OPEN);
+      });
 
-    conn.addListener(LiveTranscriptionEvents.Open, () => {
-      setConnectionState(LiveConnectionState.OPEN);
-    });
+      conn.addListener(LiveTranscriptionEvents.Close, () => {
+        setConnectionState(LiveConnectionState.CLOSED);
+      });
 
-    conn.addListener(LiveTranscriptionEvents.Close, () => {
+      conn.addListener(LiveTranscriptionEvents.Error, (error) => {
+        console.error("Deepgram connection error:", error);
+        setConnectionState(LiveConnectionState.CLOSED);
+      });
+
+      setConnection(conn);
+    } catch (error) {
+      console.error("Failed to connect to Deepgram:", error);
       setConnectionState(LiveConnectionState.CLOSED);
-    });
-
-    setConnection(conn);
+    }
   };
+
 
   const disconnectFromDeepgram = async () => {
     if (connection) {
