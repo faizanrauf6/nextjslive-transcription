@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
   // Production
   try {
     const cachedKey = await redis.get(DEEPGRAM_CACHE_KEY);
-    console.log("Cached key:", cachedKey);
     if (cachedKey) {
       return NextResponse.json({ key: cachedKey });
     }
